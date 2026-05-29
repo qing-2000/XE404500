@@ -22,11 +22,9 @@ int main()
                                       resp->setBody("Test endpoint works!");
                                       callback(resp);
                                   });
-    // Set HTTP listener address and port
     drogon::app().addListener("0.0.0.0", 7777);
-    // Load config file
-    // drogon::app().loadConfigFile("../config.json");
-    // Run HTTP framework,the method will block in the internal event loop
+    //创建数据库引擎
+    drogon::app().loadConfigFile("config.json");
     drogon::app().run();
     return 0;
 }
