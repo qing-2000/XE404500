@@ -1,0 +1,19 @@
+{
+    "app": {
+        "name": "voice_calendar",
+        "listen_addresses": ["0.0.0.0:7777"],
+        "number_of_threads": 4,
+        "document_root": "./"
+    },
+    "db_clients": {
+        "default": {
+            "db_type": "mysql",
+            "host": "127.0.0.1",
+            "port": 3306,
+            "user": "root",
+            "password": "your_password",
+            "database": "calendar_db",
+            "connection_number": 10
+        }
+    }
+}
