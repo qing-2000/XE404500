@@ -1,0 +1,86 @@
+.voice-assistant {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+/* 识别结果气泡 */
+.transcript-bubble {
+  background: white;
+  border-radius: 14px;
+  padding: 14px 22px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  max-width: 300px;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.transcript-text {
+  font-size: 1rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+/* 麦克风包装器 */
+.mic-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 脉冲动画环 */
+.pulse-ring {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.25);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* 麦克风按钮 */
+.mic-button {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(59,130,246,0.4);
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.mic-button:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.mic-button.listening {
+  background: #ef4444;
+  box-shadow: 0 6px 20px rgba(239,68,68,0.4);
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
