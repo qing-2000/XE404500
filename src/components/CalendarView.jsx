@@ -11,15 +11,14 @@ function CalendarView({ events }) {
         initialView="dayGridMonth"
         events={events}
         height="100%"
-        contentHeight="100%"
         expandRows={true}
+        stickyHeaderDates={false}
         headerToolbar={{
           left: 'title',
           right: ''
         }}
         locale="zh-cn"
         buttonText={{ today: '今天' }}
-        dayCellClassNames="calendar-day-cell"
         eventClassNames="calendar-event"
       />
     </div>

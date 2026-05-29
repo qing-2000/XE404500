@@ -4,8 +4,8 @@ import VoiceAssistant from './components/VoiceAssistant';
 import './App.css';
 
 const INITIAL_EVENTS = [
-  { title: '项目启动会', start: '2026-05-29', allDay: true },
-  { title: '提交周报', start: '2026-05-30', allDay: true }
+  { title: '游玩PANDORA PARADOXXX Re Master', start: '2026-05-29', allDay: true },
+  { title: '游玩系ぎて Re Master', start: '2026-05-30', allDay: true }
 ];
 
 function App() {
@@ -14,13 +14,11 @@ function App() {
   const [transcript, setTranscript] = useState('');
   const [showTranscript, setShowTranscript] = useState(false);
 
-  // 由 VoiceAssistant 回调，当识别完成时调用
   const handleVoiceResult = useCallback((text) => {
     setTranscript(text);
     setShowTranscript(true);
     setIsListening(false);
-    // 这里可以接着调用解析函数，然后添加事件
-    // 暂时先只显示识别结果
+    // 后续在这里接解析 + addEvent
   }, []);
 
   const addEvent = useCallback((event) => {

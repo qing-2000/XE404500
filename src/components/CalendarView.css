@@ -1,11 +1,10 @@
 .calendar-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 20px;
+  flex: 1;                   
+  min-height: 0;            
+  padding: 20px 20px 90px 20px;  
   box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;          
 }
 
 .fc {
@@ -32,12 +31,14 @@
 }
 
 .fc .fc-daygrid-day-frame {
-  max-width: none;
+  max-width: 100%;
   width: 100%;
+  overflow: hidden;           
 }
 
-.fc .fc-day-today {
-  background-color: #eff6ff !important;
+.fc-daygrid-day-events {
+  overflow: hidden;
+  max-height: 100%;          
 }
 
 .calendar-event {
@@ -49,6 +50,13 @@
   font-weight: 500;
   color: white !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  white-space: normal;
+/*overflow: hidden;
+  text-overflow: ellipsis;*/  
+}
+
+.fc .fc-day-today {
+  background-color: #eff6ff !important;
 }
 
 .fc .fc-toolbar-title {
