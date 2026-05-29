@@ -1,0 +1,58 @@
+.calendar-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.fc {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.fc-view-harness,
+.fc-view-harness-active,
+.fc-daygrid-body,
+.fc-daygrid-body-balanced {
+  width: 100% !important;
+}
+
+.fc-scrollgrid-sync-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.fc-scrollgrid-sync-table th,
+.fc-scrollgrid-sync-table td {
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.fc .fc-daygrid-day-frame {
+  max-width: none;
+  width: 100%;
+}
+
+.fc .fc-day-today {
+  background-color: #eff6ff !important;
+}
+
+.calendar-event {
+  background: #3b82f6 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: white !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
