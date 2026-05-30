@@ -3,7 +3,24 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import './CalendarView.css';
 
-function CalendarView({ events }) {
+function CalendarView({ events, onDatesSet }) {
+  // 自定义事件内容：精简显示
+  const renderEventContent = (eventInfo) => {
+    const { event } = eventInfo;
+    const props = event.extendedProps || {};
+    const start = event.start;
+    const hours = start ? String(start.getHours()).padStart(2, '0') : '';
+    const locationShort = props.location ? props.location.slice(0, 4) : '';
+
+    return (
+      <div className="event-content">
+        {hours && <span className="event-time">{hours}:00</span>}
+        {locationShort && <span className="event-loc"> {locationShort}</span>}
+        <span className="event-title"> {event.title}</span>
+      </div>
+    );
+  };
+
   return (
     <div className="calendar-container">
       <FullCalendar
@@ -19,7 +36,8 @@ function CalendarView({ events }) {
         }}
         locale="zh-cn"
         buttonText={{ today: '今天' }}
-        eventClassNames="calendar-event"
+        eventContent={renderEventContent}
+        datesSet={onDatesSet}
       />
     </div>
   );

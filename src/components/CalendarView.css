@@ -1,12 +1,12 @@
 .calendar-container {
-  flex: 1;                   
-  min-height: 0;            
-  padding: 20px 20px 90px 20px;  
-  box-sizing: border-box;
+  height: 60%;                /* 占主内容区 60% */
   width: 100%;
-  overflow: hidden;          
+  padding: 20px 20px 0 20px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
+/* 其余全宽、表格fixed等样式保持不变（上一个版本中那些） */
 .fc {
   width: 100% !important;
   height: 100% !important;
@@ -33,34 +33,50 @@
 .fc .fc-daygrid-day-frame {
   max-width: 100%;
   width: 100%;
-  overflow: hidden;           
+  overflow: hidden;
 }
 
 .fc-daygrid-day-events {
   overflow: hidden;
-  max-height: 100%;          
 }
 
-.calendar-event {
-  background: #3b82f6 !important;
-  border: none !important;
-  border-radius: 6px !important;
-  padding: 4px 8px !important;
-  font-size: 0.85rem;
+/* 精简事件样式 */
+.event-content {
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  gap: 0 3px;
+}
+
+.event-time {
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.event-loc {
+  color: #6b7280;
+  max-width: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-title {
   font-weight: 500;
-  color: white !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  white-space: normal;
-/*overflow: hidden;
-  text-overflow: ellipsis;*/  
+  color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* 今日高亮 */
 .fc .fc-day-today {
   background-color: #eff6ff !important;
 }
 
 .fc .fc-toolbar-title {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 600;
   color: #1f2937;
 }
