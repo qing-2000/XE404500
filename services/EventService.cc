@@ -13,11 +13,14 @@ EventService::EventService() {
 
 void EventService::addEvent(const Json::Value& event,
                             std::function<void(const Json::Value&)> callback) {
+    LOG_INFO << ">>> NEW VERSION of addEvent is running! <<<";  // 关键日志
     std::string title = event["title"].asString();
+    std::string description = event.get("description", "").asString();
     std::string event_time = event["event_time"].asString();
+    std::string reminder_email = event.get("reminder_email", "").asString();
     
     dbClient_->execSqlAsync(
-        "INSERT INTO events (title, event_time) VALUES ($1, $2)",
+        "INSERT INTO events (title, description,event_time,reminder_email) VALUES (?, ?,?,?)",
         [callback](const orm::Result& result) {
             Json::Value ret;
             ret["id"] = (int)result.insertId();
@@ -29,7 +32,10 @@ void EventService::addEvent(const Json::Value& event,
             ret["error"] = e.base().what();
             callback(ret);
         },
-        title, event_time
+        title,           // 对应 $1
+        description,     // 对应 $2
+        event_time,      // 对应 $3
+        reminder_email   // 对应 $4
     );
 }
 
@@ -57,11 +63,13 @@ void EventService::getEvents(std::function<void(const Json::Value&)> callback) {
 
 void EventService::updateEvent(int id, const Json::Value& event,
                                std::function<void(bool success)> callback) {
+    
     std::string title = event.get("title", "").asString();
+    std::string description = event.get("description", "").asString();
     std::string event_time = event.get("event_time", "").asString();
     
     dbClient_->execSqlAsync(
-        "UPDATE events SET title = $1, event_time = $2 WHERE id = $3",
+        "UPDATE events SET title = ?, event_time = ? WHERE id = ?",
         [callback](const Result& result) {
             callback(result.affectedRows() > 0);
         },
@@ -75,11 +83,57 @@ void EventService::updateEvent(int id, const Json::Value& event,
 
 void EventService::deleteEvent(int id, std::function<void(bool success)> callback) {
     dbClient_->execSqlAsync(
-        "DELETE FROM events WHERE id = $1",
+        "DELETE FROM events WHERE id = ?",
         [callback](const Result& result) {
             callback(result.affectedRows() > 0);
         },
         [callback](const DrogonDbException& e) {
+            LOG_ERROR << e.base().what();
+            callback(false);
+        },
+        id
+    );
+}
+
+// services/EventService.cc (添加以下两个函数)
+
+void EventService::getNextUpcomingEvent(std::function<void(const Json::Value&)> callback) {
+    // 查询当前时间之后、未提醒的、最早的一个事件
+    dbClient_->execSqlAsync(
+        "SELECT id, title, description, event_time, reminder_email, reminder_sent "
+        "FROM events "
+        "WHERE event_time > NOW() AND reminder_sent = 0 "
+        "ORDER BY event_time ASC "
+        "LIMIT 1",
+        [callback](const drogon::orm::Result& result) {
+            if (result.empty()) {
+                callback(Json::nullValue);  // 没有待提醒事件
+                return;
+            }
+            auto row = result[0];
+            Json::Value event;
+            event["id"] = row["id"].as<int64_t>();
+            event["title"] = row["title"].as<std::string>();
+            event["description"] = row["description"].as<std::string>();
+            event["event_time"] = row["event_time"].as<std::string>();
+            event["reminder_email"] = row["reminder_email"].as<std::string>();
+            event["reminder_sent"] = row["reminder_sent"].as<int>();
+            callback(event);
+        },
+        [callback](const drogon::orm::DrogonDbException& e) {
+            LOG_ERROR << e.base().what();
+            callback(Json::nullValue);
+        }
+    );
+}
+
+void EventService::markReminderSent(int64_t id, std::function<void(bool)> callback) {
+    dbClient_->execSqlAsync(
+        "UPDATE events SET reminder_sent = 1 WHERE id = ?",
+        [callback](const drogon::orm::Result& result) {
+            callback(result.affectedRows() > 0);
+        },
+        [callback](const drogon::orm::DrogonDbException& e) {
             LOG_ERROR << e.base().what();
             callback(false);
         },

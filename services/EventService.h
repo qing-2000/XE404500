@@ -15,6 +15,12 @@ public:
                      std::function<void(bool success)> callback);
     void deleteEvent(int id, std::function<void(bool success)> callback);
     
+    // 新增：获取下一个未提醒的事件
+    void getNextUpcomingEvent(std::function<void(const Json::Value&)> callback);
+    
+    // 新增：标记事件已提醒
+    void markReminderSent(int64_t id, std::function<void(bool)> callback);
+    
 private:
     drogon::orm::DbClientPtr dbClient_;
 };

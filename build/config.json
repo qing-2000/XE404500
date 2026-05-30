@@ -19,5 +19,13 @@
             "passwd": "1234",
             "connection_number": 10
         }
-    ]
+    ],
+    
+    "smtp": {
+    "server": "smtp.qq.com",
+    "port": 465,
+    "email": "1994665145@qq.com",
+    "auth_code": "mutfqvghfwhndhjf"
+  
+    }
 }
