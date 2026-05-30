@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { parseTextToEvent } from '../utils/parseText';
 import './TodoList.css';
 
@@ -9,32 +9,20 @@ const viewTypeTitles = {
   multiMonthYear: '今年待办'
 };
 
-function getPriorityFilter(viewType) {
-  switch (viewType) {
-    case 'dayGridDay': return ['urgent'];
-    case 'dayGridWeek': return ['high', 'medium', 'low'];
-    case 'dayGridMonth': return ['medium', 'low'];
-    case 'multiMonthYear': return ['low'];
-    default: return ['urgent', 'high', 'medium', 'low'];
-  }
-}
-
 function TodoList({ events, viewType, onUpdateEvent, onDeleteEvent, onAddEvent }) {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
   const [textInput, setTextInput] = useState('');
 
-  const visibleEvents = useMemo(() => {
-    const allowed = getPriorityFilter(viewType);
-    return events.filter(ev => allowed.includes(ev.priority || 'medium'));
-  }, [events, viewType]);
+  // 直接使用传入的 events（已由父组件按紧迫度排序）
+  const visibleEvents = events;
 
   const startEdit = (event) => {
     setEditingId(event.id);
     setEditData({
       title: event.title,
       start: event.start?.slice(0, 16),
-      priority: event.priority || 'medium',
+      priority: event.extendedProps?.computedPriority || event.priority || 'medium',
       location: event.extendedProps?.location || '',
       locationUrl: event.extendedProps?.locationUrl || '',
       person: event.extendedProps?.person || '',
@@ -99,7 +87,7 @@ function TodoList({ events, viewType, onUpdateEvent, onDeleteEvent, onAddEvent }
         <button className="add-btn" onClick={() => onAddEvent()}>＋ 添加事件</button>
       </div>
       <div className="todo-list">
-        {visibleEvents.length === 0 && <p className="empty-msg">暂无符合条件的事件</p>}
+        {visibleEvents.length === 0 && <p className="empty-msg">暂无事件</p>}
         {visibleEvents.map(event => {
           const isEditing = editingId === event.id;
           const start = new Date(event.start);
@@ -137,18 +125,18 @@ function TodoList({ events, viewType, onUpdateEvent, onDeleteEvent, onAddEvent }
             description: viewType === 'dayGridDay'
           };
 
+          const priorityColor = event.extendedProps?.computedPriority || 'medium';
+
           return (
             <div key={event.id} className="todo-item">
-              <div className={`priority-indicator priority-${event.priority || 'medium'}`} />
+              <div className={`priority-indicator priority-${priorityColor}`} />
               <div className="todo-time">{dateStr} {timeStr}</div>
               <div className="todo-body">
                 <div className="todo-title">{event.title}</div>
                 {showDetails.location && event.extendedProps?.location && (
                   <div className="todo-details">
                     <span className="todo-location">
-                      📍 {event.extendedProps.locationUrl ? (
-                        <a href={event.extendedProps.locationUrl} target="_blank" rel="noreferrer">{event.extendedProps.location}</a>
-                      ) : event.extendedProps.location}
+                      📍 {event.extendedProps.location}
                     </span>
                   </div>
                 )}
