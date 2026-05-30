@@ -18,45 +18,38 @@ function CalendarView({ events, viewType, onDatesSet }) {
 
     // 根据视图类型返回不同的 JSX
     switch (viewType) {
-      case 'dayGridDay':
-        return (
-          <div className="event-content event-detail-day">
-            <div className="event-time">{timeStr}</div>
-            <div className="event-title">{event.title}</div>
+    case 'dayGridDay':
+      return (
+        <div className="event-content event-detail-day">
+          <div className="day-title">{event.title}</div>
+          <div className="day-time">{timeStr}</div>
+          <div className="day-meta">
             {props.location && (
-              <div className="event-loc">
-                📍 {props.locationUrl ? (
-                  <a href={props.locationUrl} target="_blank" rel="noreferrer">{props.location}</a>
-                ) : props.location}
-              </div>
+              <span className="event-loc" style={{ whiteSpace: 'nowrap' }}>
+                📍 {props.location}
+              </span>
             )}
-            {props.person && <div className="event-person">👤 {props.person}</div>}
-            {props.description && <div className="event-desc">📝 {props.description}</div>}
+            {props.person && <span className="event-person">👤 {props.person}</span>}
+            {props.description && <span className="event-desc">📝 {props.description}</span>}
           </div>
-        );
+        </div>
+      );
 
       case 'dayGridWeek':
         return (
           <div className="event-content event-detail-week">
-            <div><span className="event-time">{timeStr}</span> <span className="event-title">{event.title}</span></div>
-            {props.location && (
-              <div className="event-loc">
-                📍 {props.locationUrl ? (
-                  <a href={props.locationUrl} target="_blank" rel="noreferrer">{props.location}</a>
-                ) : props.location}
+            <div className="week-main">
+              <span className="event-time">{timeStr}</span>
+              <span className="event-title">{event.title}</span>
+            </div>
+            {(props.location || props.person) && (
+              <div className="week-meta">
+                {props.location && <span className="event-loc">📍 {props.location}</span>}
+                {props.person && <span className="event-person">👤 {props.person}</span>}
               </div>
             )}
-            {props.person && <div className="event-person">👤 {props.person}</div>}
           </div>
         );
-
-      case 'multiMonthYear':
-        return (
-          <div className="event-content event-detail-year">
-            <span className="event-title">{event.title}</span>
-          </div>
-        );
-
       // 月视图（默认）
       default:
         return (
@@ -70,7 +63,7 @@ function CalendarView({ events, viewType, onDatesSet }) {
   };
 
   const eventClassNames = (arg) => {
-    const priority = arg.event.extendedProps?.priority || 'medium';
+    const priority = arg.event.extendedProps?.computedPriority || 'medium';
     return [`priority-${priority}`];
   };
 

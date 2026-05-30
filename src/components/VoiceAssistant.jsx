@@ -6,35 +6,79 @@ function VoiceAssistant({
   isListening,
   setIsListening,
   transcript,
+  setTranscript,
   showTranscript,
   setShowTranscript,
-  onVoiceResult,
+  onVoiceResult
 }) {
-  const timeoutRef = useRef(null);
+  const recognitionRef = useRef(null);
 
-  // 点击麦克风模拟开始/结束
-  const handleMicClick = () => {
-    if (isListening) {
-      // 停止监听
+  // 初始化语音识别对象
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.warn('当前浏览器不支持语音识别');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'zh-CN';            // 中文识别
+    recognition.interimResults = false;    // 只获取最终结果，省去中间过程
+    recognition.continuous = false;        // 单次识别
+
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript;
+      setTranscript(text);
+      setShowTranscript(true);
       setIsListening(false);
-      // 模拟一个识别结果
-      onVoiceResult('明天下午三点开会');
+
+      // 将识别文字传给父组件处理
+      if (onVoiceResult) onVoiceResult(text);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('语音识别错误:', event.error);
+      setTranscript('识别失败，请重试');
+      setShowTranscript(true);
+      setIsListening(false);
+
+      // 3秒后自动隐藏错误提示
+      setTimeout(() => setShowTranscript(false), 3000);
+    };
+
+    recognition.onend = () => {
+      // 无论成功或失败，确保聆听状态关闭
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+  }, [setTranscript, setShowTranscript, setIsListening, onVoiceResult]);
+
+  // 点击麦克风开始/结束
+  const handleMicClick = () => {
+    const recognition = recognitionRef.current;
+    if (!recognition) {
+      alert('您的浏览器不支持语音识别，请使用 Chrome 浏览器');
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
     } else {
-      setIsListening(true);
-      // 自动超时关闭
-      timeoutRef.current = setTimeout(() => {
+      setTranscript('');
+      setShowTranscript(false);
+      try {
+        recognition.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('启动语音识别失败:', error);
         setIsListening(false);
-        onVoiceResult('明天下午三点开会');
-      }, 3000);
+      }
     }
   };
 
-  // 清理定时器
-  useEffect(() => {
-    return () => clearTimeout(timeoutRef.current);
-  }, []);
-
-  // 3秒后自动隐藏识别结果气泡
+  // 自动隐藏识别结果气泡
   useEffect(() => {
     if (showTranscript && transcript) {
       const timer = setTimeout(() => setShowTranscript(false), 4000);
@@ -44,10 +88,7 @@ function VoiceAssistant({
 
   return (
     <div className="voice-assistant">
-      {/* 语音命令提示浮窗 */}
       <CommandHint />
-
-      {/* 识别结果气泡 */}
       {showTranscript && (
         <div className="transcript-bubble">
           <span className="transcript-text">
@@ -55,8 +96,6 @@ function VoiceAssistant({
           </span>
         </div>
       )}
-
-      {/* 麦克风按钮 + 状态环 */}
       <div className="mic-wrapper">
         {isListening && <div className="pulse-ring" />}
         <button
