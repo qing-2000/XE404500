@@ -19,7 +19,7 @@ endif ()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(${PROJECT_NAME} main.cc controllers/Calendar.cc)
+add_executable(${PROJECT_NAME} main.cc controllers/Calendar.cc services/EventService.cc services/sendMail.cc)
 
 # ##############################################################################
 # If you include the drogon source code locally in your project, use this method
@@ -29,6 +29,21 @@ add_executable(${PROJECT_NAME} main.cc controllers/Calendar.cc)
 #
 # and comment out the following lines
 find_package(Drogon CONFIG REQUIRED)
+
+
+# 查找 MySQL 库（与 Drogon 使用的版本保持一致）
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(MYSQL REQUIRED libmariadb)   # 或者 libmysqlclient
+
+# 或使用自定义查找（若 pkg-config 不可用）
+# find_path(MYSQL_INCLUDE_DIR NAMES mysql.h PATH_SUFFIXES mysql mariadb)
+# find_library(MYSQL_LIBRARY NAMES mariadb mysqlclient)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+    Drogon::Drogon 
+    ${MYSQL_LIBRARIES}   # 或 ${MYSQL_LIBRARY}
+)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon)
 
 # ##############################################################################
@@ -71,5 +86,8 @@ target_sources(${PROJECT_NAME}
 # set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 
 # ##############################################################################
+
+
+
 
 add_subdirectory(test)
