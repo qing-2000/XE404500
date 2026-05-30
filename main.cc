@@ -8,7 +8,7 @@
 #include <ctime>
 #include <iomanip>
 #include <sstream>
-
+#include "controllers/voice.h"
 
 // 解析 "2026-06-01 14:00:00" 格式的时间字符串为 time_t
 static time_t parseTimeString(const std::string& timeStr) {
@@ -94,6 +94,8 @@ loop->runEvery(60.0, []() {
         }
     });
 });
+    auto voiceCtrl = std::make_shared<voice>();
+    drogon::app().registerController(voiceCtrl);
     drogon::app().run();
     return 0;
 }

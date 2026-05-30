@@ -140,3 +140,99 @@ void EventService::markReminderSent(int64_t id, std::function<void(bool)> callba
         id
     );
 }
+
+// services/EventService.cc 中添加
+
+void EventService::deleteEventByTitle(const std::string& title,
+                                      std::function<void(bool, const std::string&)> callback) {
+    dbClient_->execSqlAsync(
+        "DELETE FROM events WHERE title = ?",
+        [callback](const drogon::orm::Result& result) {
+            if (result.affectedRows() > 0) {
+                callback(true, "删除成功");
+            } else {
+                callback(false, "未找到匹配的事件");
+            }
+        },
+        [callback](const DrogonDbException& e) {
+            callback(false, e.base().what());
+        },
+        title
+    );
+}
+
+void EventService::queryEvents(const std::string& keyword, const std::string& date,
+                               std::function<void(const Json::Value&)> callback) {
+    std::string sql;
+    if (date == "today") {
+        sql = "SELECT id, title, event_time FROM events WHERE DATE(event_time) = CURDATE()";
+    } else if (date == "tomorrow") {
+        sql = "SELECT id, title, event_time FROM events WHERE DATE(event_time) = DATE_ADD(CURDATE(), INTERVAL 1 DAY)";
+    } else {
+        sql = "SELECT id, title, event_time FROM events WHERE title LIKE ?";
+    }
+    
+    if (date.empty() && !keyword.empty()) {
+        std::string likeKeyword = "%" + keyword + "%";
+        dbClient_->execSqlAsync(
+            sql,
+            [callback](const drogon::orm::Result& result) {
+                Json::Value events(Json::arrayValue);
+                for (auto& row : result) {
+                    Json::Value ev;
+                    ev["id"] = row["id"].as<int>();
+                    ev["title"] = row["title"].as<std::string>();
+                    ev["event_time"] = row["event_time"].as<std::string>();
+                    events.append(ev);
+                }
+                callback(events);
+            },
+            [callback](const DrogonDbException& e) {
+                Json::Value ret;
+                ret["error"] = e.base().what();
+                callback(ret);
+            },
+            likeKeyword
+        );
+    } else {
+        dbClient_->execSqlAsync(
+            sql,
+            [callback](const drogon::orm::Result& result) {
+                Json::Value events(Json::arrayValue);
+                for (auto& row : result) {
+                    Json::Value ev;
+                    ev["id"] = row["id"].as<int>();
+                    ev["title"] = row["title"].as<std::string>();
+                    ev["event_time"] = row["event_time"].as<std::string>();
+                    events.append(ev);
+                }
+                callback(events);
+            },
+            [callback](const DrogonDbException& e) {
+                Json::Value ret;
+                ret["error"] = e.base().what();
+                callback(ret);
+            }
+        );
+    }
+}
+
+void EventService::updateEventByTitle(const std::string& oldTitle,
+                                      const std::string& newTitle,
+                                      const std::string& newTime,
+                                      std::function<void(bool, const std::string&)> callback) {
+    dbClient_->execSqlAsync(
+        "UPDATE events SET title = ? WHERE title = ?",
+        [callback](const drogon::orm::Result& result) {
+            if (result.affectedRows() > 0) {
+                callback(true, "更新成功");
+            } else {
+                callback(false, "未找到匹配的事件");
+            }
+        },
+        [callback](const DrogonDbException& e) {
+            callback(false, e.base().what());
+        },
+        newTitle, oldTitle
+    );
+}

@@ -20,6 +20,18 @@ public:
     
     // 新增：标记事件已提醒
     void markReminderSent(int64_t id, std::function<void(bool)> callback);
+
+    // services/EventService.h 中添加
+    void deleteEventByTitle(const std::string& title, 
+                        std::function<void(bool, const std::string&)> callback);
+
+    void queryEvents(const std::string& keyword, const std::string& date,
+                 std::function<void(const Json::Value&)> callback);
+                 
+    void updateEventByTitle(const std::string& oldTitle, 
+                        const std::string& newTitle,
+                        const std::string& newTime,
+                        std::function<void(bool, const std::string&)> callback);
     
 private:
     drogon::orm::DbClientPtr dbClient_;
