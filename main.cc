@@ -11,7 +11,8 @@
 #include "controllers/voice.h"
 
 // 解析 "2026-06-01 14:00:00" 格式的时间字符串为 time_t
-static time_t parseTimeString(const std::string& timeStr) {
+static time_t parseTimeString(const std::string &timeStr)
+{
     std::tm tm = {};
     std::istringstream ss(timeStr);
     ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
@@ -19,15 +20,14 @@ static time_t parseTimeString(const std::string& timeStr) {
 }
 
 // 判断是否应该发送提醒（提前 reminderMinutes 分钟）
-static bool isTimeToRemind(const std::string& eventTimeStr, int reminderMinutes = 10) {
+static bool isTimeToRemind(const std::string &eventTimeStr, int reminderMinutes = 10)
+{
     time_t eventTime = parseTimeString(eventTimeStr);
     time_t now = std::time(nullptr);
     double diffSec = std::difftime(eventTime, now);
     // 提醒窗口：提前 reminderMinutes 分钟以内，且尚未过期
     return (diffSec <= reminderMinutes * 60 && diffSec > -60); // 过期超过1分钟不再提醒
 }
-
-
 
 int main()
 {
@@ -49,27 +49,40 @@ int main()
                                       resp->setBody("Test endpoint works!");
                                       callback(resp);
                                   });
-    
+
     drogon::app().registerHandler("/test_delete/{id}",
-    [](const drogon::HttpRequestPtr& req,
-       std::function<void(const drogon::HttpResponsePtr&)>&& callback,
-       const std::string& id) {
-        auto resp = drogon::HttpResponse::newHttpResponse();
-        resp->setBody("Deleted " + id);
-        callback(resp);
-    },
-    {drogon::Delete});
+                                  [](const drogon::HttpRequestPtr &req,
+                                     std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                                     const std::string &id)
+                                  {
+                                      auto resp = drogon::HttpResponse::newHttpResponse();
+                                      resp->setBody("Deleted " + id);
+                                      callback(resp);
+                                  },
+                                  {drogon::Delete});
 
     drogon::app().addListener("0.0.0.0", 7777);
-    //创建数据库引擎
+    // 创建数据库引擎
     drogon::app().loadConfigFile("config.json");
 
-    //计时器
-// 获取主事件循环
-auto loop = drogon::app().getLoop();
+    drogon::app().registerPostHandlingAdvice(
+        [](const drogon::HttpRequestPtr &req,
+           const drogon::HttpResponsePtr &resp)
+        {
+            resp->addHeader("Access-Control-Allow-Origin", "*");
+            resp->addHeader("Access-Control-Allow-Methods",
+                            "GET,POST,PUT,DELETE,OPTIONS");
+            resp->addHeader("Access-Control-Allow-Headers",
+                            "Content-Type");
+        });
 
-// 设置定时器，每60秒扫描一次
-loop->runEvery(60.0, []() {
+    // 计时器
+    // 获取主事件循环
+    auto loop = drogon::app().getLoop();
+
+    // 设置定时器，每60秒扫描一次
+    loop->runEvery(60.0, []()
+                   {
     LOG_INFO << "Scanning for upcoming events...";
     
     EventService eventService;
@@ -103,11 +116,8 @@ loop->runEvery(60.0, []() {
                 }
             );
         }
-    });
-});
+    }); });
 
-   
-    
     drogon::app().registerController(std::make_shared<voice>());
     drogon::app().run();
     return 0;

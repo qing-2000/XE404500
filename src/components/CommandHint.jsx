@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import React from 'react';
 
 const hints = [
   '试试说：明天下午三点开会',
