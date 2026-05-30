@@ -1,7 +1,15 @@
-* {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -10,8 +18,15 @@ body {
 }
 
 .app {
+  height: 100%;
+  width: 100%;
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding-right: 0;  /* 语音按钮区域稍后处理 */
 }
