@@ -3,7 +3,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import multiMonthPlugin from '@fullcalendar/multimonth';
 import interactionPlugin from '@fullcalendar/interaction';
 import './CalendarView.css';
-
+import React from 'react';
 function CalendarView({ events, viewType, onDatesSet }) {
   const renderEventContent = (eventInfo) => {
     const { event } = eventInfo;

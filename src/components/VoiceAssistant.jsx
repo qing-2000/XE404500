@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import CommandHint from './CommandHint';
 import './VoiceAssistant.css';
-
+import React from 'react';
 function VoiceAssistant({
   isListening,
   setIsListening,
