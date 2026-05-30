@@ -49,6 +49,17 @@ int main()
                                       resp->setBody("Test endpoint works!");
                                       callback(resp);
                                   });
+    
+    drogon::app().registerHandler("/test_delete/{id}",
+    [](const drogon::HttpRequestPtr& req,
+       std::function<void(const drogon::HttpResponsePtr&)>&& callback,
+       const std::string& id) {
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        resp->setBody("Deleted " + id);
+        callback(resp);
+    },
+    {drogon::Delete});
+
     drogon::app().addListener("0.0.0.0", 7777);
     //创建数据库引擎
     drogon::app().loadConfigFile("config.json");
@@ -94,8 +105,10 @@ loop->runEvery(60.0, []() {
         }
     });
 });
-    auto voiceCtrl = std::make_shared<voice>();
-    drogon::app().registerController(voiceCtrl);
+
+   
+    
+    drogon::app().registerController(std::make_shared<voice>());
     drogon::app().run();
     return 0;
 }

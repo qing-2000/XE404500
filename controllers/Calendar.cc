@@ -5,21 +5,36 @@
 
 using namespace drogon;
 
-void Calendar::asyncHandleHttpRequest(const HttpRequestPtr& req,
-                                      std::function<void(const HttpResponsePtr&)>&& callback) {
+void Calendar::asyncHandleHttpRequest(const HttpRequestPtr& req,std::function<void(const HttpResponsePtr&)>&& callback) {
+    //打印路径
+    LOG_INFO << "Request: " << req->methodString() << " " << req->path();
+
     if (req->method() == Post && req->path() == "/events") {
         addEvent(req, std::move(callback));
     }
     else if (req->method() == Get && req->path() == "/events") {
         getEvents(req, std::move(callback));
     }
-    else if (req->method() == Delete && req->path().find("/events/") == 0) {
-        auto id = std::stoll(req->path().substr(8));
-        deleteEvent(req, std::move(callback), id);
+    else if (req->method() == Delete) {
+       auto idStr = req->getParameter("id");
+       LOG_INFO << "delete id=" << idStr;
+       auto id = std::stoll(idStr);
+       deleteEvent(req, std::move(callback), id);
     }
-    else if (req->method() == Put && req->path().find("/events/") == 0) {
-        auto id = std::stoll(req->path().substr(8));
-        updateEvent(req, std::move(callback), id);
+    else if (req->method() == Put) {
+    auto idStr = req->getParameter("id");
+
+    if(idStr.empty())
+    {
+        auto resp = HttpResponse::newHttpResponse();
+        resp->setStatusCode(k400BadRequest);
+        callback(resp);
+        return;
+    }
+
+    auto id = std::stoll(idStr);
+
+    updateEvent(req, std::move(callback), id);
     }
     else {
         auto resp = HttpResponse::newHttpResponse();
@@ -59,12 +74,12 @@ void Calendar::getEvents(const HttpRequestPtr& req,
 void Calendar::updateEvent(const HttpRequestPtr& req,
                            std::function<void(const HttpResponsePtr&)>&& callback,
                            long id) {
+    LOG_INFO << "Updating event ID: " << id;
     auto json = req->getJsonObject();
-    if (!json) {
-        auto resp = HttpResponse::newHttpResponse();
-        resp->setStatusCode(k400BadRequest);
-        callback(resp);
-        return;
+    if (json) {
+        LOG_INFO << "Update data: " << json->toStyledString();
+    } else {
+        LOG_INFO << "No JSON body";
     }
     
     EventService service;
@@ -80,9 +95,7 @@ void Calendar::updateEvent(const HttpRequestPtr& req,
     });
 }
 
-void Calendar::deleteEvent(const HttpRequestPtr& req,
-                           std::function<void(const HttpResponsePtr&)>&& callback,
-                           long id) {
+void Calendar::deleteEvent(const HttpRequestPtr& req,std::function<void(const HttpResponsePtr&)>&& callback,long id) {
     EventService service;
     service.deleteEvent(id, [callback](bool success) {
         auto resp = HttpResponse::newHttpResponse();

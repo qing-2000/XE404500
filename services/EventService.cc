@@ -41,13 +41,14 @@ void EventService::addEvent(const Json::Value& event,
 
 void EventService::getEvents(std::function<void(const Json::Value&)> callback) {
     dbClient_->execSqlAsync(
-        "SELECT id, title, event_time FROM events",
+        "SELECT id, title, event_time, description FROM events",
         [callback](const orm::Result& result) {
             Json::Value events(Json::arrayValue);
             for (auto& row : result) {
                 Json::Value event;
                 event["id"] = row["id"].as<int>();
                 event["title"] = row["title"].as<std::string>();
+                event["description"]=row["description"].as<std::string>();
                 event["event_time"] = row["event_time"].as<std::string>();
                 events.append(event);
             }
@@ -61,27 +62,55 @@ void EventService::getEvents(std::function<void(const Json::Value&)> callback) {
     );
 }
 
-void EventService::updateEvent(int id, const Json::Value& event,
-                               std::function<void(bool success)> callback) {
-    
-    std::string title = event.get("title", "").asString();
-    std::string description = event.get("description", "").asString();
-    std::string event_time = event.get("event_time", "").asString();
-    
+void EventService::updateEvent(
+    int id,
+    const Json::Value& event,
+    std::function<void(bool success)> callback)
+{
+    // 先查询旧值
     dbClient_->execSqlAsync(
-        "UPDATE events SET title = ?, event_time = ? WHERE id = ?",
-        [callback](const Result& result) {
-            callback(result.affectedRows() > 0);
+        "SELECT title, description, event_time FROM events WHERE id = ?",
+        [this, id, event, callback](const Result& result) {
+            if (result.empty()) {
+                callback(false);
+                return;
+            }
+            const auto& row = result[0];
+            std::string title = row["title"].as<std::string>();
+            std::string description = row["description"].as<std::string>();
+            std::string event_time = row["event_time"].as<std::string>();
+            
+            // 部分覆盖
+            if (event.isMember("title"))
+                title = event["title"].asString();
+            if (event.isMember("description"))
+                description = event["description"].asString();
+            if (event.isMember("event_time"))
+                event_time = event["event_time"].asString();
+            
+            // 执行更新
+            dbClient_->execSqlAsync(
+                "UPDATE events SET title = ?, description = ?, event_time = ? WHERE id = ?",
+                [callback](const Result& res) {
+                    callback(res.affectedRows() > 0);
+                },
+                [callback](const DrogonDbException& e) {
+                    LOG_ERROR << e.base().what();
+                    callback(false);
+                },
+                title, description, event_time, id
+            );
         },
         [callback](const DrogonDbException& e) {
             LOG_ERROR << e.base().what();
             callback(false);
         },
-        title, event_time, id
+        id
     );
 }
 
 void EventService::deleteEvent(int id, std::function<void(bool success)> callback) {
+    LOG_INFO << "delete id=" << id;
     dbClient_->execSqlAsync(
         "DELETE FROM events WHERE id = ?",
         [callback](const Result& result) {
