@@ -1,0 +1,31 @@
+{
+    "app": {
+        "name": "voice_calendar",
+        "listen_addresses": [
+            "0.0.0.0:7777"
+        ],
+        "number_of_threads": 4,
+        "document_root": "./"
+    },
+
+    "db_clients": [
+        {
+            "name": "default",
+            "rdbms": "mysql",
+            "host": "127.0.0.1",
+            "port": 3306,
+            "dbname": "calendar_db",
+            "user": "root",
+            "passwd": "1234",
+            "connection_number": 10
+        }
+    ],
+    
+    "smtp": {
+    "server": "smtp.qq.com",
+    "port": 465,
+    "email": "1994665145@qq.com",
+    "auth_code": "mutfqvghfwhndhjf"
+  
+    }
+}
