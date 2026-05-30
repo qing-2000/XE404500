@@ -24,8 +24,8 @@
     "smtp": {
     "server": "smtp.qq.com",
     "port": 465,
-    "email": "1994665145@qq.com",
-    "auth_code": "mutfqvghfwhndhjf"
+    "email": "your@qq.com",
+    "auth_code": "your code"
   
     }
 }

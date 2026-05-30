@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)  # 建议至少 3.10
 project(base CXX)
 
+# C++ 标准检测
 include(CheckIncludeFileCXX)
-
 check_include_file_cxx(any HAS_ANY)
 check_include_file_cxx(string_view HAS_STRING_VIEW)
 check_include_file_cxx(coroutine HAS_COROUTINE)
+
 if (NOT "${CMAKE_CXX_STANDARD}" STREQUAL "")
     # Do nothing
 elseif (HAS_ANY AND HAS_STRING_VIEW AND HAS_COROUTINE)
@@ -19,35 +20,47 @@ endif ()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(${PROJECT_NAME} main.cc controllers/Calendar.cc services/EventService.cc services/sendMail.cc)
+# 禁用 PIE 避免链接警告（可选）
+set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 
-# ##############################################################################
-# If you include the drogon source code locally in your project, use this method
-# to add drogon 
-# add_subdirectory(drogon) 
-# target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
-#
-# and comment out the following lines
+# 查找依赖
 find_package(Drogon CONFIG REQUIRED)
+find_package(Threads REQUIRED)
 
+# 查找 MySQL/MariaDB 客户端库
+find_library(MYSQL_LIB NAMES mariadb mysqlclient)
+if(NOT MYSQL_LIB)
+    message(FATAL_ERROR "MySQL/MariaDB client library not found")
+endif()
 
-# 查找 MySQL 库（与 Drogon 使用的版本保持一致）
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(MYSQL REQUIRED libmariadb)   # 或者 libmysqlclient
-
-# 或使用自定义查找（若 pkg-config 不可用）
-# find_path(MYSQL_INCLUDE_DIR NAMES mysql.h PATH_SUFFIXES mysql mariadb)
-# find_library(MYSQL_LIBRARY NAMES mariadb mysqlclient)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-    Drogon::Drogon 
-    ${MYSQL_LIBRARIES}   # 或 ${MYSQL_LIBRARY}
+# 源文件列表（只在这里添加一次）
+set(SOURCES
+    main.cc
+    controllers/Calendar.cc
+    controllers/voice.cc
+    services/EventService.cc
+    services/sendMail.cc
+    services/TextProcess.cc
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon)
+# 创建可执行文件
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-# ##############################################################################
+# 链接库
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Drogon::Drogon
+    ${MYSQL_LIB}
+    Threads::Threads
+)
 
+# 包含目录
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/controllers
+    ${CMAKE_CURRENT_SOURCE_DIR}/services
+)
+
+# 输出 C++ 标准信息
 if (CMAKE_CXX_STANDARD LESS 17)
     message(FATAL_ERROR "c++17 or higher is required")
 elseif (CMAKE_CXX_STANDARD LESS 20)
@@ -56,38 +69,5 @@ else ()
     message(STATUS "use c++20")
 endif ()
 
-aux_source_directory(controllers CTL_SRC)
-aux_source_directory(filters FILTER_SRC)
-aux_source_directory(plugins PLUGIN_SRC)
-aux_source_directory(models MODEL_SRC)
-
-drogon_create_views(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/views
-                    ${CMAKE_CURRENT_BINARY_DIR})
-# use the following line to create views with namespaces.
-# drogon_create_views(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/views
-#                     ${CMAKE_CURRENT_BINARY_DIR} TRUE)
-# use the following line to create views with namespace CHANGE_ME prefixed
-# and path namespaces.
-# drogon_create_views(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/views
-#                     ${CMAKE_CURRENT_BINARY_DIR} TRUE CHANGE_ME)
-
-target_include_directories(${PROJECT_NAME}
-                           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                   ${CMAKE_CURRENT_SOURCE_DIR}/models)
-target_sources(${PROJECT_NAME}
-               PRIVATE
-               ${SRC_DIR}
-               ${CTL_SRC}
-               ${FILTER_SRC}
-               ${PLUGIN_SRC}
-               ${MODEL_SRC})
-# ##############################################################################
-# uncomment the following line for dynamically loading views 
-# set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
-
-# ##############################################################################
-
-
-
-
-add_subdirectory(test)
+# 如果有测试目录，取消下一行注释
+# add_subdirectory(test)
