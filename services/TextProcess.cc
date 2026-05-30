@@ -35,83 +35,74 @@ Command TextProcessor::parseCommand(const std::string& text) {
 Command TextProcessor::parseAdd(const std::string& text) {
     Command cmd;
     cmd.action = "add";
-    
-    // 提取时间（简单模式：匹配类似 "明天下午3点"、"6月1日10点" 等）
-    // 这里简化处理，实际需要更复杂的 NLP 或时间解析库
-    std::regex timeRegex(R"((\d{1,2})月(\d{1,2})日(\d{1,2})点(\d{0,2})?)");
+    // 正则：匹配 年.月.日,时,分 然后空格 标题（必填） 空格 描述（可选）
+    // 例如：2026.05.31,15,00 产品评审会议 讨论架构
+    std::regex structRegex(R"((\d{4})\.(\d{1,2})\.(\d{1,2}),(\d{1,2}),(\d{1,2})\s+([^\s]+)(?:\s+(.+))?)");
     std::smatch match;
-    if (std::regex_search(text, match, timeRegex)) {
-        std::string month = match[1];
-        std::string day = match[2];
-        std::string hour = match[3];
-        std::string minute = match[4].length() ? match[4].str() : "00";
-        cmd.eventTime = "2026-" + month + "-" + day + " " + hour + ":" + minute + ":00";
+    if (std::regex_search(text, match, structRegex)) {
+        std::string year = match[1].str();
+        std::string month = match[2].str();
+        std::string day = match[3].str();
+        std::string hour = match[4].str();
+        std::string minute = match[5].str();
+        cmd.title = match[6].str();          // 标题（第一个词）
+        cmd.description = match[7].str();    // 描述（剩余部分，可能为空）
+        
+        // 格式化为 MySQL TIMESTAMP 格式
+        cmd.eventTime = year + "-" + month + "-" + day + " " + hour + ":" + minute + ":00";
     } else {
-        // 默认时间：明天上午10点
-        cmd.eventTime = "2026-06-01 10:00:00";
+        // 若格式不符，返回错误指令
+        cmd.action = "unknown";
+        cmd.title = "无法解析，请使用格式: 年.月.日,时,分 标题 描述";
     }
     
-    // 提取标题（"添加...的会议" 等模式）
-    std::regex titleRegex(R"(添加(.*?)(?:的会议|的活动|的任务|$))");
-    if (std::regex_search(text, match, titleRegex)) {
-        cmd.title = match[1];
-    } else if (text.length() > 10) {
-        cmd.title = text.substr(0, 20);  // 取前20字作为标题
-    }
-    
-    // 设置默认邮箱（可从配置读取）
+    // 默认邮箱（可从配置读取）
     cmd.reminderEmail = "1994665145@qq.com";
-    
     return cmd;
 }
 
 Command TextProcessor::parseDelete(const std::string& text) {
     Command cmd;
     cmd.action = "delete";
-    
-    // 提取要删除的事件标题
-    std::regex titleRegex(R"(删除(.*?)(?:的会议|的活动|的任务|$))");
+    std::regex delRegex(R"(删除\s+(.+))");
     std::smatch match;
-    if (std::regex_search(text, match, titleRegex)) {
-        cmd.title = match[1];
+    if (std::regex_search(text, match, delRegex)) {
+        cmd.title = match[1].str();
     } else {
-        cmd.title = text.substr(6);  // 去掉"删除"二字
+        cmd.action = "unknown";
     }
-    
     return cmd;
 }
 
 Command TextProcessor::parseQuery(const std::string& text) {
     Command cmd;
     cmd.action = "query";
-    
-    // 判断查询类型
-    if (text.find("今天") != std::string::npos) {
-        cmd.date = "today";
-        cmd.keyword = "";
-    } else if (text.find("明天") != std::string::npos) {
-        cmd.date = "tomorrow";
-        cmd.keyword = "";
+    std::regex dateRegex(R"(查询\s+(\d{4}\.\d{1,2}\.\d{1,2}))");
+    std::smatch match;
+    if (std::regex_search(text, match, dateRegex)) {
+        cmd.date = match[1].str();  // 例如 "2026.05.31"
     } else {
-        // 按关键词查询
-        cmd.keyword = text;
-        cmd.date = "";
+        // 按标题模糊查询
+        std::regex titleRegex(R"(查询\s+(.+))");
+        if (std::regex_search(text, match, titleRegex)) {
+            cmd.keyword = match[1].str();
+        } else {
+            cmd.action = "unknown";
+        }
     }
-    
     return cmd;
 }
 
 Command TextProcessor::parseUpdate(const std::string& text) {
     Command cmd;
     cmd.action = "update";
-    
-    // 提取原标题和新标题
-    std::regex updateRegex(R"(把(.*?)改为(.*?)(?:的会议|$))");
+    std::regex updateRegex(R"(更新\s+(\S+)\s+(\S+))");
     std::smatch match;
     if (std::regex_search(text, match, updateRegex)) {
-        cmd.title = match[1];
-        cmd.newTitle = match[2];
+        cmd.title = match[1].str();      // 原标题
+        cmd.newTitle = match[2].str();   // 新标题
+    } else {
+        cmd.action = "unknown";
     }
-    
     return cmd;
 }

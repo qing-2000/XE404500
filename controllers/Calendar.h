@@ -4,14 +4,13 @@
 
 class Calendar : public drogon::HttpSimpleController<Calendar> {
 public:
-    void asyncHandleHttpRequest(const drogon::HttpRequestPtr& req,
-                                std::function<void(const drogon::HttpResponsePtr&)>&& callback) override;
+    void asyncHandleHttpRequest(const drogon::HttpRequestPtr& req,std::function<void(const drogon::HttpResponsePtr&)>&& callback) override;
     
     PATH_LIST_BEGIN
         PATH_ADD("/events", drogon::Post);
         PATH_ADD("/events", drogon::Get);
-        PATH_ADD("/events/{id}", drogon::Delete);
-        PATH_ADD("/events/{id}", drogon::Put);
+        PATH_ADD("/events", drogon::Delete);
+        PATH_ADD("/events", drogon::Put);
     PATH_LIST_END
     
     // 声明方法

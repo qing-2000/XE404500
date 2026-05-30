@@ -21,8 +21,6 @@ public:
     Command parseCommand(const std::string& text);
     
 private:
-    std::string extractTime(const std::string& text);
-    std::string extractTitle(const std::string& text);
     Command parseAdd(const std::string& text);
     Command parseDelete(const std::string& text);
     Command parseQuery(const std::string& text);
